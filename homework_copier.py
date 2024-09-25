@@ -6,13 +6,6 @@ Author:
 Andrew Willems
 
 Instructions:
-1. Update the my_id variable with your login id.
-2. Update the usr_list variable with the login ids of the students whose homework assignments you want to copy over.
-3. Update the grading_dir variable with the directory where you want to copy the students' homework assignments for grading.
-4. Update the homework_number variable with the number of the homework you want to copy over (if looking to only copy over specific assignments). If you want to copy over all of the students' homework assignments, set this variable to None.
-5. Run the script.
-
-Additional Instructions (Optional):
 - You can also pass command line arguments to the script for more flexibility:
     - Use the `--homework_number` argument followed by the number(s) of the homework you want to copy over (if looking to only copy over specific assignments).
     - Use the `--my_id` argument followed by your login id.
@@ -41,8 +34,6 @@ args = parser.parse_args()
 my_id = args.my_id
 homework_number = args.homework_number
 
-# My login id
-# my_id = 'awillems'
 
 # Students' login ids
 usr_list = [
@@ -80,9 +71,6 @@ usr_list = [
 
 # Directory where to copy students' homework assignments for grading
 grading_dir = '/home/jupyter-' + my_id + '/assignments'
-
-# Specify the number of the homework you want to copy over (if looking to only copy over specific assignments)
-# homework_number = ['05']
 
 
 for student in usr_list:
