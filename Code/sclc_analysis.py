@@ -7,10 +7,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import locale
+from scipy import stats
 
 # Set the locale to the user's default (for proper display of numbers and such)
 locale.setlocale(locale.LC_ALL, '') 
-
 
 
 # Load the data
@@ -20,19 +20,50 @@ print("There are " + str(bulk_data.shape[0]) + " patients and " + str(f'{bulk_da
 print("There are " + str(bulk_data.shape[0]) + " rows and " + str(f'{bulk_data.shape[1]:n}') + " total columns in the dataset.")
 print(str(bulk_data.columns[13]).upper() + " is the first gene in the dataset.")
 
-# Plot the distribution of the first gene
-# Create a new figure
-for i in range(13, len(bulk_data.columns)):
-    fig = plt.figure(figsize=(10, 5))
-    ax1 = fig.add_subplot(121)
-    ax2 = fig.add_subplot(122)
-    ax1.hist(bulk_data[bulk_data.columns[i]], bins=50, color='blue', alpha=0.7)
-    ax1.set_title('Distribution of ' + str(bulk_data.columns[i]).upper())
-    ax1.set_xlabel('Expression')
-    ax1.set_ylabel('Frequency')
-    ax2.hist(np.log2(bulk_data[bulk_data.columns[i]] + 1), bins=50, color='red', alpha=0.7)
-    ax2.set_title('Log2 Distribution of ' + str(bulk_data.columns[i]).upper())
-    ax2.set_xlabel('Log2 Expression')
-    ax2.set_ylabel('Frequency')
-    plt.tight_layout()
+
+
+def test_normality(data, gene_name, transformation='raw'):
+    """
+    Perform Anderson-Darling test and return test statistic and critical values.
+    """
+    result = stats.anderson(data)
+    return pd.Series({
+        'gene': gene_name,
+        'transformation': transformation,
+        'statistic': result.statistic,
+        'critical_values': result.critical_values,
+        'significance_level': result.significance_level
+    })
+
+
+# Test normality for each gene and transformation
+results = []
+bulk_data_sub = bulk_data.iloc[:, 13:]
+for gene in bulk_data_sub.index:
+    data = bulk_data_sub.loc[gene]
+    results.append(test_normality(data, gene, 'raw'))
+    results.append(test_normality(np.log2(data + 1), gene, 'log2'))
+    results.append(test_normality(np.log10(data + 1), gene, 'log10'))
+
+results_df = pd.DataFrame(results)
+
+# Find the best transformation for each gene (lowest Anderson-Darling statistic)
+best_transformations = results_df.loc[results_df.groupby('gene')['statistic'].idxmin()]
+
+# Print summary
+print(best_transformations['transformation'].value_counts())
+
+ax1 = best_transformations['transformation'].value_counts().plot(kind='bar')
+ax1.set_xlabel('Transformation')
+ax1.set_ylabel('Count')
+ax1.set_title('Best Transformations for Each Gene')
+ax1.set_xticklabels(['Log2', 'Log10'], rotation=0)
+
+
+# Plots of the various metadata columns
+for column in bulk_data.columns[1:13]:
+    ax = bulk_data[column].value_counts().plot(kind='bar')
+    ax.set_xlabel(column)
+    ax.set_ylabel('Count')
+    ax.set_title('Distribution of ' + column)
     plt.show()
