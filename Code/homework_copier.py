@@ -20,6 +20,7 @@ import pwd
 import grp
 import re
 import argparse
+import stat
 
 # Initializing the parser
 parser = argparse.ArgumentParser(description='A simple script to copy homework assignments from students directories to a single directory for grading')
@@ -76,8 +77,21 @@ grading_dir = '/home/jupyter-' + my_id + '/assignments'
 
 def copy_file(src, dst):
     copyfile(src, dst)
+    os.chmod(dst, 0o666)  # rw-rw-rw-
     if verbose:
         print(f'Copying {os.path.basename(src)} from {os.path.dirname(src)} to {os.path.dirname(dst)}')
+
+def set_permissions(path):
+    # Set directory permissions to 775 (rwxrwxr-x)
+    os.chmod(path, 0o775)
+    
+    # Set group to the current user's primary group
+    gid = os.getgid()
+    os.chown(path, -1, gid)
+    
+    # Set the setgid bit
+    current_mode = os.stat(path).st_mode
+    os.chmod(path, current_mode | stat.S_ISGID)
 
 for student in usr_list:
     # Create a directory for the student in the grading directory
@@ -86,17 +100,9 @@ for student in usr_list:
     os.makedirs(student_grading_dir, exist_ok=True)
     os.makedirs(student_data_dir, exist_ok=True)
     
-    # Set the appropriate permissions for the student directories
-    os.chmod(student_grading_dir, 0o755) # rwxr-xr-x
-    os.chmod(student_data_dir, 0o755) # rwxr-xr-x
-
-    # Ensure the current user has write permissions
-    current_user = pwd.getpwuid(os.getuid()).pw_name
-    current_group = grp.getgrgid(os.getgid()).gr_name
-    
-    # Make sure the current user has proper permissions
-    os.chown(student_grading_dir, os.getuid(), os.getgid())
-    os.chown(student_data_dir, os.getuid(), os.getgid())
+    # Set permissions for the student directories
+    set_permissions(student_grading_dir)
+    set_permissions(student_data_dir)
 
     students_dir = '/home/jupyter-' + student + '/assignments'
 
