@@ -21,7 +21,7 @@ print("There are " + str(bulk_data.shape[0]) + " rows and " + str(f'{bulk_data.s
 print(str(bulk_data.columns[13]).upper() + " is the first gene in the dataset.")
 
 
-
+# Function to test for normality
 def test_normality(data, gene_name, transformation='raw'):
     """
     Perform Anderson-Darling test and return test statistic and critical values.
@@ -53,17 +53,39 @@ best_transformations = results_df.loc[results_df.groupby('gene')['statistic'].id
 # Print summary
 print(best_transformations['transformation'].value_counts())
 
+'''
 ax1 = best_transformations['transformation'].value_counts().plot(kind='bar')
 ax1.set_xlabel('Transformation')
 ax1.set_ylabel('Count')
 ax1.set_title('Best Transformations for Each Gene')
 ax1.set_xticklabels(['Log2', 'Log10'], rotation=0)
+'''
 
 
 # Plots of the various metadata columns
+'''
 for column in bulk_data.columns[1:13]:
     ax = bulk_data[column].value_counts().plot(kind='bar')
     ax.set_xlabel(column)
     ax.set_ylabel('Count')
     ax.set_title('Distribution of ' + column)
-    plt.show()
+    plt.show() 
+'''
+
+
+
+# Now seeing that our gene expression data is heavily skewed, we will perform a log2 transformation on the data
+# Log2 transform the data
+metadata = bulk_data.iloc[:, :13]
+gene_expr = np.log2(bulk_data.iloc[:, 13:] + 1)
+
+# Combine the metadata and transformed gene expression data
+bulk_data_transformed = pd.concat([metadata, gene_expr], axis=1)
+
+# Replace the original dataframe with the transformed one
+bulk_data = bulk_data_transformed
+
+# Verify the transformation
+print(bulk_data.head())
+print(f"Shape of the dataframe: {bulk_data.shape}")
+
