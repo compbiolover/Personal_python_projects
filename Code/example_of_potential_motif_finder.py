@@ -4,7 +4,7 @@
 import re
 
 # Fictional Amino acid sequence to search for motifs
-aa_seq = '''LAATLLTGCUAUUA'''
+aa_seq = 'LAATLLTGCUAUUA'
 
 
 # Preprocess the amino acid sequence to remove any non-alphabet characters
